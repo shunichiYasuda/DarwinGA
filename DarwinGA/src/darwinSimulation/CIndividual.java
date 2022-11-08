@@ -9,4 +9,5 @@ public class CIndividual {
 	double payoff, scaledPayoff, cumPayoff, avePayoff;
 	//繰り返しゲームのカウント
 	int gameCount = 0;
+	
 }
