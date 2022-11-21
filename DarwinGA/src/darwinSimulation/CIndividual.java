@@ -46,6 +46,30 @@ public class CIndividual {
 	}
 
 	//
+	// 対戦履歴の更新。一回の対戦ごとに更新される。受け入れるのは対戦相手のchoice
+	public void reMem(char in) {
+		// 記憶領域のビット長
+		int L = this.memRec.length;
+		char[] tmp = new char[L];
+		// はじめに最初の2ビットを捨てて、以降を詰める
+		for (int i = 0; i < tmp.length - 2; i++) {
+			tmp[i] = this.memRec[2 + i];
+		}
+		// 終わりから2ビット目 [L-2] は自分が出した choice である。
+		tmp[L - 2] = this.getChoice();
+		// 最後のビットは in である。
+		tmp[L - 1] = in;
+		// tmp で memRec を更新する。
+		for (int i = 0; i < L; i++) {
+			this.memRec[i] = tmp[i];
+		}
+		// 記憶が更新されたら、adr が変わり、 myChoice が変わる。
+		// 記憶の更新（ゲームのプレイ）がトリガーになるということだ。
+		String str = new String(this.memRec);
+		this.adr = Integer.parseInt(str, 2);
+		this.myChoice = this.chrom[this.adr];
+	}
+
 	// setter
 	public void setPayoff(double p) {
 		// ゲームの利得がはいってくる、ということはゲームが1回終わったということなので
