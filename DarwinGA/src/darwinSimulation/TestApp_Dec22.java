@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class TestApp_Dec21 {
+public class TestApp_Dec22 {
 	static CPopulation pop;
 	static final int POPSIZE = 20;
+
 	public static void main(String[] args) {
 		pop = new CPopulation(POPSIZE);
 		int p1 = 0;
@@ -21,31 +22,59 @@ public class TestApp_Dec21 {
 		pop.scaling();
 		List<Integer> parentsList = new ArrayList<Integer>();
 		makeParents(parentsList);
-		//
-		for(int d:parentsList) {
-			System.out.println("parents="+d+"\t"+pop.member[d].scaledPayoff);
-		}
-		//
 		Collections.shuffle(parentsList);
+		//
+		for (int d : parentsList) {
+			System.out.print(d+"\t");
+			printRec(pop.member[d].chrom);
+			System.out.println();
+		}
+		System.out.println("------------------------------------------------------------------------------------");
+		//
+		mutation(parentsList);
+		//
+		for (int d : parentsList) {
+			System.out.print(d+"\t");
+			printRec(pop.member[d].chrom);
+			System.out.println();
+		}
+		
+	}// end of main()
+		//
 
-	} // end of main()
+	// mutation
+	private static void mutation(List<Integer> parentsList) {
+		for(int d: parentsList) {
+			for (int index = 0; index < CHeader.LENGTH; index++) {
+				if (bingo(CHeader.mutProb)) {
+					System.out.println("hit="+d);
+					if (pop.member[d].chrom[index] == '1') {
+						pop.member[d].chrom[index] = '0';
+					} else {
+						pop.member[d].chrom[index] = '1';
+					}
+				} //
+			}
+		}
+	}
+
 	//
 	private static void makeParents(List<Integer> parentsList) {
-		//based on scaled payoff 
+		// based on scaled payoff
 		double sum = 0.0;
 		for (int i = 0; i < POPSIZE; i++) {
 			sum += pop.member[i].getScaledPayoff();
 		}
-		//cumlate payoff
+		// sum payoff
 		double[] roulet = new double[POPSIZE];
 		roulet[0] = pop.member[0].getScaledPayoff() / sum;
 		for (int m = 1; m < POPSIZE; m++) {
 			roulet[m] = roulet[m - 1] + (pop.member[m].getScaledPayoff() / sum);
 		}
-		
-		 // for(int m=0;m<roulet.length;m++){ System.out.println("\t"+roulet[m]); }
-		 
-		//check hit
+
+		// for(int m=0;m<roulet.length;m++){ System.out.println("\t"+roulet[m]); }
+
+		// check hit
 		double border;
 		int p_index;
 		for (int i = 0; i < POPSIZE; i++) {
@@ -66,14 +95,14 @@ public class TestApp_Dec21 {
 		}
 	}
 
-	
-	//lottery probability prob
+	// lottery probability prob
 	private static boolean bingo(double prob) {
 		boolean r = false;
 		if (Math.random() < prob)
 			r = true;
 		return r;
 	}
+
 	//
 	static void game(int p1, int p2) {
 		char select_p1 = pop.member[p1].getChoice();
@@ -119,4 +148,4 @@ public class TestApp_Dec21 {
 		}
 	}
 
-} // end of App
+}
