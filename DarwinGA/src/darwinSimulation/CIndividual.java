@@ -45,6 +45,25 @@ public class CIndividual {
 		gameCount = 0;
 	}
 
+	// replace : 染色体を新しくして自分自身を上書きする。記憶については初期化される。
+	public void replace(char[] in) {
+		// 染色体の置き換え
+		for (int i = 0; i < CHeader.LENGTH; i++) {
+			this.chrom[i] = in[i];
+		}
+		// 記憶の初期化
+		initBinary(this.memRec);
+		// 記憶が指し示すアドレス 0から数えるので、配列のアドレスになる（ビットを数えるときに注意）
+		String tmp = new String(this.memRec);
+		this.adr = Integer.parseInt(tmp, 2);
+		// そのアドレスにある行動（0:協力'C', 1：裏切り'D'）
+		this.myChoice = this.chrom[this.adr];
+		// 利得関係初期化
+		payoff = scaledPayoff = cumPayoff = avePayoff = 0.0;
+		// ゲームカウント。個体によってゲーム回数が異なるので
+		gameCount = 0;
+	}
+
 	//
 	// 対戦履歴の更新。一回の対戦ごとに更新される。受け入れるのは対戦相手のchoice
 	public void reMem(char in) {
