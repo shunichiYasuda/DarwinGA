@@ -1,6 +1,12 @@
 package darwinSimulation;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -8,41 +14,91 @@ import java.util.Random;
 public class TestApp_Jan05 {
 	static CPopulation pop;
 	static final int POPSIZE = 20;
+	static final int GEN = 100;
+	static final int LOOP = 1;
+	static String dateName;
+	static String timeStamp;
+	static File aveFile, memFile, statFile;
+	static PrintWriter pwAve, pwGType, pwStat;
 
 	public static void main(String[] args) {
-		pop = new CPopulation(POPSIZE);
-		int p1 = 0;
-		while (p1 < POPSIZE - 1) {
-			for (int m = (p1 + 1); m < POPSIZE; m++) {
-				int p2 = m;
-				game(p1, p2);
-			}
-			p1++;
-		}
-		pop.calcStat();
-		pop.scaling();
-		List<Integer> parentsList = new ArrayList<Integer>();
-		makeParents(parentsList);
-		mutation(parentsList);
-		crossover(parentsList);
-		// 置き換えられた染色体であらたな個体を作る.
-		// pop.member の染色体を上書きするときに、親の個体番号を利用するので、いきなりの
-		// 上書きはNG.なので、pop.member から parentsList の長さの数分 chrom配列を作っておいて、
-		// そちらに親番号をもつ chromをコピーしておき、一括して置き換える。
-		List<String> tmpParentsChrom = new ArrayList<String>();
-		for (int m : parentsList) {
-			tmpParentsChrom.add(new String(pop.member[m].chrom));
-		}
-		// 置き換え
-		for (int i = 0; i < POPSIZE; i++) {
-			char[] tmpChrom = new char[CHeader.LENGTH];
-			tmpChrom = tmpParentsChrom.get(i).toCharArray();
-			pop.member[i].replace(tmpChrom);
-		}
+		// 記録ファイル類
+		makeDate();
+		makeFiles();
+		// 実験ループ
+		int exp = 0;
+		while (exp < LOOP) {
+			pop = new CPopulation(POPSIZE);
+			int gen = 0;
+			while (gen < GEN) {
+				int p1 = 0;
+				while (p1 < POPSIZE - 1) {
+					for (int m = (p1 + 1); m < POPSIZE; m++) {
+						int p2 = m;
+						game(p1, p2);
+					}
+					p1++;
+				}
+				pop.calcStat();
+				//
+				System.out.println(pop.mAve);
+				//
+				pop.scaling();
+				List<Integer> parentsList = new ArrayList<Integer>();
+				makeParents(parentsList);
+				mutation(parentsList);
+				crossover(parentsList);
+				// 置き換えられた染色体であらたな個体を作る.
+				// pop.member の染色体を上書きするときに、親の個体番号を利用するので、いきなりの
+				// 上書きはNG.なので、pop.member から parentsList の長さの数分 chrom配列を作っておいて、
+				// そちらに親番号をもつ chromをコピーしておき、一括して置き換える。
+				List<String> tmpParentsChrom = new ArrayList<String>();
+				for (int m : parentsList) {
+					tmpParentsChrom.add(new String(pop.member[m].chrom));
+				}
+				// 置き換え
+				for (int i = 0; i < POPSIZE; i++) {
+					char[] tmpChrom = new char[CHeader.LENGTH];
+					tmpChrom = tmpParentsChrom.get(i).toCharArray();
+					pop.member[i].replace(tmpChrom);
+				}
+				//
+				gen++; //世代を進める
+			} // end of while(GEN) 世代ループの終わり
+			exp++;
+		} // end of while(EXP) 実験ループの終わり
 
 	}// end of main()
-		// 一点交叉メソッド
 
+	// 記録ファイル作成
+	private static void makeFiles() {
+		memFile = new File(dateName + "_GType.txt");
+		statFile = new File(dateName + "_stat.txt");
+		aveFile = new File(dateName + "_ave.txt");
+		try {
+			FileWriter fw = new FileWriter(memFile);
+			FileWriter fw2 = new FileWriter(statFile);
+			FileWriter fw3 = new FileWriter(aveFile);
+			BufferedWriter bw = new BufferedWriter(fw);
+			BufferedWriter bw2 = new BufferedWriter(fw2);
+			BufferedWriter bw3 = new BufferedWriter(fw3);
+			pwGType = new PrintWriter(bw);
+			pwStat = new PrintWriter(bw2);
+			pwAve = new PrintWriter(bw3);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	// ファイルのクローズ
+	private static void closeFiles() {
+		pwGType.close();
+		pwStat.close();
+		pwAve.close();
+	}
+
+// 一点交叉メソッド
 	private static void crossover(List<Integer> parentsList) {
 		Collections.shuffle(parentsList);
 		for (int m = 0; m < parentsList.size() - 1; m += 2) {
@@ -52,7 +108,7 @@ public class TestApp_Jan05 {
 			Random randSeed = new Random();
 			if (bingo(CHeader.crossProb)) {
 				// check
-				System.out.println("hit:" + parent1 + ":" + parent2);
+				//System.out.println("hit:" + parent1 + ":" + parent2);
 				int point = randSeed.nextInt(CHeader.LENGTH);
 				// まったく入れ替わらない・全部入れ替わるが起きるといやなので
 				while (point == 0 || point == CHeader.LENGTH - 1) {
@@ -171,6 +227,19 @@ public class TestApp_Jan05 {
 		for (int i = 0; i < in.length; i++) {
 			System.out.print(in[i] + "\t");
 		}
+	}
+
+	static void makeDate() {
+		Calendar cal1 = Calendar.getInstance();
+		int year = cal1.get(Calendar.YEAR);
+		int month = cal1.get(Calendar.MONTH);
+		int day = cal1.get(Calendar.DATE);
+		int hour = cal1.get(Calendar.HOUR_OF_DAY);
+		int minute = cal1.get(Calendar.MINUTE);
+		int second = cal1.get(Calendar.SECOND);
+		String[] monthArray = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jly", "Aug", "Sep", "Oct", "Nov", "Dec" };
+		dateName = new String(monthArray[month] + day + "_" + year);
+		timeStamp = new String(dateName + ":" + hour + ":" + minute + ":" + second);
 	}
 
 }
